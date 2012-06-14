@@ -76,10 +76,10 @@ class CheckRedis
   def used_memory_peak(options)
     value = @stats['used_memory_peak'].to_i
     if value >= options[:warn]
-      puts "WARN: used_memory_peak exceeds warning level of #{options[:warn]} : #{value} | used_memory_peak=#{value} (#{@stats['used_memory_human']}) ;#{options[:warn]};#{options[:crit]};;"
+      puts "WARN: used_memory_peak exceeds warning level of #{options[:warn]} : #{value} | used_memory_peak=#{value}(#{@stats['used_memory_human']}); #{options[:warn]}; #{options[:crit]};;"
       exit 1
     else
-      puts "OK: used_memory_peak is ok | used_memory=#{value}  (#{@stats['used_memory_human']}) ;#{options[:warn]};#{options[:crit]};;"
+      puts "OK: used_memory_peak is ok -- used_memory=#{value}(#{@stats['used_memory_human']}); #{options[:warn]}; #{options[:crit]};;"
       exit 0
     end 
     # TODO: redis.info has some human_values
@@ -88,13 +88,13 @@ class CheckRedis
   def used_memory(options)
     value = @stats['used_memory'].to_i
     if value >= options[:crit]
-      puts "CRIT: used_memory exceeds critical level of #{options[:crit]} : #{value} | used_memory=#{value} (#{@stats['used_memory_human']}) ;#{options[:warn]};#{options[:crit]};;"
+      puts "CRIT: used_memory exceeds critical level of #{options[:crit]} : #{value} | used_memory=#{value}(#{@stats['used_memory_human']}) ;#{options[:warn]}; #{options[:crit]};;"
       exit 2
     elsif value >= options[:warn]
-      puts "WARN: used_memory exceeds warning level of #{options[:warn]} : #{value} | used_memory=#{value} (#{@stats['used_memory_human']}) ;#{options[:warn]};#{options[:crit]};;"
+      puts "WARN: used_memory exceeds warning level of #{options[:warn]} : #{value} | used_memory=#{value}(#{@stats['used_memory_human']}); #{options[:warn]}; #{options[:crit]};;"
       exit 1
     else
-      puts "OK: used_memory is ok | used_memory=#{value}  (#{@stats['used_memory_human']}) ;#{options[:warn]};#{options[:crit]};;"
+      puts "OK: used_memory is ok - used_memory=#{value}(#{@stats['used_memory_human']}); #{options[:warn]}; #{options[:crit]};;"
       exit 0
     end 
     # TODO: redis.info has some human_values
