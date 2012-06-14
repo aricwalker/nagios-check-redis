@@ -16,6 +16,7 @@ OptionParser.new do |opt|
 
   opt.on("-w", "--warn WARN", Integer, "Nagios warning level") { |warn| options[:nagios][:warn] = warn }
   opt.on("-c", "--crit CRIT", Integer, "Nagios critical level") { |crit| options[:nagios][:crit] = crit }
+  opt.on("-e", "--expc WARN", Integer, "Nagios warning level") { |expc| options[:nagios][:expected_clients] = expc }
 
   opt.separator ""
   opt.separator "Connection options:"
@@ -37,47 +38,67 @@ class CheckRedis
 
   def initialize(opts, cmd)
     @redis = Redis.new(opts[:conn])
-    gather_stats(opts[:nagios], cmd)
+    @stats = @redis.info
 
-  rescue Errno::ECONNREFUSED => e
-    puts e.message
-    exit 2
-  rescue Errno::ENETUNREACH => e
-    puts e.message
-    exit 2
-  rescue Errno::EHOSTUNREACH => e
-    puts e.message
-    exit 2
-  rescue Errno::EACCES => e
-    puts e.message
-    exit 2
-  end
-
-  private
-
-  def gather_stats(options, cmd)
-    stats = @redis.info
-    if stats[cmd]
-      value = stats[cmd].to_i
-
-      if value >= options[:crit]
-        puts "CRIT: #{cmd} exceeds critical level of #{options[:crit]} : #{value} | #{cmd}=#{value};#{options[:warn]};#{options[:crit]};;"
-        exit 2
-      elsif value >= options[:warn]
-        puts "WARN: #{cmd} exceeds warning level of #{options[:warn]} : #{value} | #{cmd}=#{value};#{options[:warn]};#{options[:crit]};;"
-        exit 1
-      else
-        puts "OK: #{cmd} is ok | #{cmd}=#{value};#{options[:warn]};#{options[:crit]};;"
-        exit 0
-      end 
-
-      # TODO: redis.info has some human_values
-
+    if @stats[cmd]
+      send(cmd.to_sym, opts[:nagios])      
     else
       puts "UNKNOWN: No such key - #{cmd}"
       exit 3
     end
+    
+    rescue Errno::ECONNREFUSED => e
+      puts e.message
+      exit 2
+    rescue Errno::ENETUNREACH => e
+      puts e.message
+      exit 2
+    rescue Errno::EHOSTUNREACH => e
+      puts e.message
+      exit 2
+    rescue Errno::EACCES => e
+      puts e.message
+      exit 2
+  end
 
+  private
+
+  def process_id(options)
+    puts "OK: process_id is #{@stats['process_id']}"
+    exit 0
+  end
+
+  def connected_clients(options)
+    value = @stats['connected_clients'].to_i
+    puts "OK: connected_clients is #{@stats['connected_clients']}"
+    exit 0
+  end
+
+  def used_memory_peak(options)
+    value = @stats['used_memory_peak'].to_i
+    if value >= options[:warn]
+      puts "WARN: used_memory_peak exceeds warning level of #{options[:warn]} : #{value} | used_memory_peak=#{value} (#{@stats['used_memory_human']}) ;#{options[:warn]};#{options[:crit]};;"
+      exit 1
+    else
+      puts "OK: used_memory_peak is ok | used_memory=#{value}  (#{@stats['used_memory_human']}) ;#{options[:warn]};#{options[:crit]};;"
+      exit 0
+    end 
+    # TODO: redis.info has some human_values
+  end
+
+  def used_memory(options)
+    value = @stats['used_memory'].to_i
+    if value >= options[:crit]
+      puts "CRIT: used_memory exceeds critical level of #{options[:crit]} : #{value} | used_memory=#{value} (#{@stats['used_memory_human']}) ;#{options[:warn]};#{options[:crit]};;"
+      exit 2
+    elsif value >= options[:warn]
+      puts "WARN: used_memory exceeds warning level of #{options[:warn]} : #{value} | used_memory=#{value} (#{@stats['used_memory_human']}) ;#{options[:warn]};#{options[:crit]};;"
+      exit 1
+    else
+      puts "OK: used_memory is ok | used_memory=#{value}  (#{@stats['used_memory_human']}) ;#{options[:warn]};#{options[:crit]};;"
+      exit 0
+    end 
+    # TODO: redis.info has some human_values
   end
 
 end
