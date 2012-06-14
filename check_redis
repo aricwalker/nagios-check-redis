@@ -36,16 +36,17 @@ command = ARGV[0]
 class CheckRedis
 
   def initialize(opts, cmd)
-    @redis = Redis.new(opts[:conn])
-    @stats = @redis.info
+    begin
+      @redis = Redis.new(opts[:conn])
+      @stats = @redis.info
 
-    if @stats[cmd]
-      send(cmd.to_sym, opts[:nagios])      
-    else
-      puts "UNKNOWN: No such key - #{cmd}"
-      exit 3
-    end
-    
+      if @stats[cmd]
+        send(cmd.to_sym, opts[:nagios])      
+      else
+        puts "UNKNOWN: No such key - #{cmd}"
+        exit 3
+      end
+      
     rescue Errno::ECONNREFUSED => e
       puts e.message
       exit 2
@@ -58,6 +59,13 @@ class CheckRedis
     rescue Errno::EACCES => e
       puts e.message
       exit 2
+    rescue Redis::CannotConnectError => e
+      puts e.message
+      exit 2  
+    rescue SystemStackError
+      puts "Could not connect to Redis Server"
+      exit 2
+    end
   end
 
   private
