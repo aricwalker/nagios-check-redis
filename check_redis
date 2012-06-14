@@ -16,7 +16,6 @@ OptionParser.new do |opt|
 
   opt.on("-w", "--warn WARN", Integer, "Nagios warning level") { |warn| options[:nagios][:warn] = warn }
   opt.on("-c", "--crit CRIT", Integer, "Nagios critical level") { |crit| options[:nagios][:crit] = crit }
-  opt.on("-e", "--expc WARN", Integer, "Nagios warning level") { |expc| options[:nagios][:expected_clients] = expc }
 
   opt.separator ""
   opt.separator "Connection options:"
